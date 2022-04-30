@@ -57,20 +57,20 @@ def figure():
              }
     ax.tick_params(labelsize=12)
     # -------------两种算法能够支持的用户比例----------------------------------
-    ax.set_ylabel(r'Utility of each seller operator', font1)
+    ax.set_ylabel(r'Utility of each SOP', font1)
     x = np.arange(0, cycle_index * m * l_m_lag, l_m_lag * m)
     # ax.set_title('The bandwidth demand')
-    ax.set_xlabel(r'Total budgets of buyer operators', font1)
+    ax.set_xlabel(r'Total budgets of BOPs', font1)
     marker = [".", "^", "x", "P"]
     ls = ["--", "-.", ":", "-"]
     # plt.savefig('fix.eps', dpi=300)  # 指定分辨率保存
-    lns1 = ax.plot(x, U_N_dynamic[:, 0],  marker = marker[0], ls = ls[3], color = 'blue', label= r"Seller operator 2 with game")
-    lns2 = ax.plot(x, U_N_fixed[:, 0], marker= marker[0], ls= ls[0], color = 'red', label=r"Seller operator 2 with fixed price")
-    lns3 = ax.plot(x, U_N_dynamic[:, 1], marker = marker[2], ls = ls[3], color= 'blue', label= "Seller operator 4 with game")
-    lns4 = ax.plot(x, U_N_fixed[:, 1], marker=marker[2], ls=ls[0], color = 'red', label="Seller operator 4 with fixed price")
+    lns1 = ax.plot(x, U_N_dynamic[:, 0],  marker = marker[0], ls = ls[3], color = 'blue', label= r"SOP "+ str(SOP1 + 1) + " with game")
+    lns2 = ax.plot(x, U_N_fixed[:, 0], marker= marker[0], ls= ls[0], color = 'red', label=r"SOP "+ str(SOP1 + 1) + " with fixed price")
+    lns3 = ax.plot(x, U_N_dynamic[:, 1], marker = marker[2], ls = ls[3], color= 'blue', label= r"SOP "+ str(SOP2 + 1) + " with game")
+    lns4 = ax.plot(x, U_N_fixed[:, 1], marker=marker[2], ls=ls[0], color = 'red', label=r"SOP "+ str(SOP2 + 1) + " with fixed price")
     lns = lns1 + lns2 + lns3 + lns4
     labs = [l.get_label() for l in lns]
-    ax.set_ylim(0, 250, 50)
+    #ax.set_ylim(0, 250, 50)
     x_ticks = np.arange(0, cycle_index * m * l_m_lag, l_m_lag * m * 4)
     plt.xticks(x_ticks)
     ax.legend(lns, labs, loc = 2, prop=font2, framealpha=0.5)
@@ -82,6 +82,8 @@ def figure():
 
 if __name__ == '__main__':
     # m 代表follower的数量
+    SOP1 = 1
+    SOP2 = 3
     print(cvx.installed_solvers())
     m = 50
     # n 代表leader的数量
@@ -105,12 +107,14 @@ if __name__ == '__main__':
     #l_m = np.linspace(10, 20, m)
     #print("follower的预算l_m:", l_m)
     # w_m 为follower收益函数的系数
+    #w_m = np.linspace(10, 20, m)
     w_m = log_normal.get_trunc_lognorm(10, 2, m)
     #w_m = np.random.poisson(lam = 10, size = m)
     #w_m = np.random.randint(10,11, size = m)
     #print("follower收益函数的系数w_m:", w_m)
     # g_m 为follower资源的利用率
     g_m = log_normal.get_trunc_lognorm(0.8, 0.05, m)
+    #g_m = np.linspace(0.7, 0.9, m)
     # leader的定价要小于wg_m中的最小值
     a_n_max_2 = min(w_m * g_m)
     # g_m_n将g_m扩展为M*N矩阵，每一行数据相同,g_m_n = [[g_1,...,g_1],[g_2,...,g_2],...[g_M,...,g_M]]
@@ -120,7 +124,7 @@ if __name__ == '__main__':
     c_n = np.random.randint(1, 2, size = n)
     #a_n_min = c_n * ( b_n_tol / np.sum(b_n_tol) * 10)
     # iter迭代次数
-    iter = 30
+    iter = 10
     cycle_index = 21
     # U_N_iter 为每次迭代leader的收益
     U_N_dynamic = np.zeros([cycle_index, 2])
@@ -138,13 +142,13 @@ if __name__ == '__main__':
             # 计算第ite次迭代时，第time_m个follower的效用函数
             #U_M_iter[time_m][ite] = w_m[time_m] * math.log(1 + g_m[time_m] * sum(b_m_new)) - (b_m_new @ a_n)
             b_n_remained = np.sum(b_m_n, axis = 0) - b_n_tol
-            a_n_max_1 = a_n_max_2 * np.exp(b_n_remained / b_n_tol)
+            a_n_max_1 = 10 * np.exp(- b_n_tol / max(b_n_tol))
             a_n_old = copy.copy(a_n)
             a_n = convex_leader(c_n, b_m_n, a_n_max_1, a_n_max_2)
             a_n = (a_n_old + a_n) / 2
             # 计算第ite次迭代时，第time_n个leader的效用函数
-        U_N_dynamic[l_m_0][0] = ((a_n - c_n) * np.sum(b_m_n, axis = 0))[1]
-        U_N_dynamic[l_m_0][1] = ((a_n - c_n) * np.sum(b_m_n, axis=0))[3]
+        U_N_dynamic[l_m_0][0] = ((a_n - c_n) * np.sum(b_m_n, axis = 0))[SOP1]
+        U_N_dynamic[l_m_0][1] = ((a_n - c_n) * np.sum(b_m_n, axis=0))[SOP2]
         a_n2 = np.linspace(2, 2, n)
         # a_m_n为a_n的扩展，a_m_n = [[a_1,...,a_N],[a_1,...,a_N],...,[a_1,...,a_N]]
         a_m_n2 = np.zeros([m, n])
@@ -153,8 +157,8 @@ if __name__ == '__main__':
         for ite in range(iter):
             b_m_n2 = convex_follower(b_n_tol, a_m_n2, l_m, w_m, g_m_n)
             # 计算第ite次迭代时，第time_n个leader的效用函数
-        U_N_fixed[l_m_0][0] = ((a_n2 - c_n) * np.sum(b_m_n2, axis = 0))[1]
-        U_N_fixed[l_m_0][1] = ((a_n2 - c_n) * np.sum(b_m_n2, axis=0))[3]
+        U_N_fixed[l_m_0][0] = ((a_n2 - c_n) * np.sum(b_m_n2, axis = 0))[SOP1]
+        U_N_fixed[l_m_0][1] = ((a_n2 - c_n) * np.sum(b_m_n2, axis=0))[SOP2]
     #U_N_iter = np.delete(U_N_iter, [0], axis = 0)
     wr_excel.w_excel1(U_N_dynamic, U_N_fixed)
     figure()

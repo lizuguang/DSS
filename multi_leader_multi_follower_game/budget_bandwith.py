@@ -55,23 +55,23 @@ def figure(y):
              }
     ax.tick_params(labelsize=12)
     # -------------两种算法能够支持的用户比例----------------------------------
-    ax.set_ylabel(r'Bought bandwith (MHz)', font1)
+    ax.set_ylabel(r'Bought bandwith', font1)
     x = np.arange(0, cycle_index * l_m_gap, l_m_gap)
     # ax.set_title('The bandwidth demand')
-    ax.set_xlabel(r'Budget of one buyer operator ($)', font1)
+    ax.set_xlabel(r'Budget of one BOP', font1)
     marker = [".", "^", "x", "P", "s"]
     ls = ["--", "-.", ":", "-", "solid"]
     # plt.savefig('fix.eps', dpi=300)  # 指定分辨率保存
     linewidth = 2
     lns = ax.plot(x, np.sum(y, axis = 1),  marker = "v", ls = "-", linewidth = linewidth, label= r"Total bought bandwith")
     for n_0 in range(0, n):
-        lns2 = ax.plot(x, y[:, n_0], marker = marker[n_0], ls = ls[n_0], linewidth = linewidth, label= r" Bought bandwith from seller operator " + str(n_0+1))
+        lns2 = ax.plot(x, y[:, n_0], marker = marker[n_0], ls = ls[n_0], linewidth = linewidth, label= r" Bought bandwith from SOP " + str(n_0+1))
         lns = lns + lns2
     labs = [l.get_label() for l in lns]
-    ax.set_ylim(0, 3.5, 0.5)
+    ax.set_ylim(0, 2.5, 0.5)
     x_ticks = np.arange(0, cycle_index * l_m_gap, l_m_gap * 4)
     plt.xticks(x_ticks)
-    ax.legend(lns, labs, loc = 7, bbox_to_anchor = (1, 0.6),  prop=font2, framealpha=0.5)
+    ax.legend(lns, labs, loc = 'lower left', bbox_to_anchor = (0.4, 0.6),  prop=font2, framealpha=0.5)
     ax.grid()
     ax.margins(0)
     plt.savefig('E:\cloud files\Students\lizuguang\my papers\preparing\IEEEtran\Figure\\bandwith_budget.eps', dpi=300)
@@ -131,7 +131,7 @@ if __name__ == '__main__':
             # 计算第ite次迭代时，第time_m个follower的效用函数
             #U_M_iter[time_m][ite] = w_m[time_m] * math.log(1 + g_m[time_m] * sum(b_m_new)) - (b_m_new @ a_n)
             b_n_remained = np.sum(b_m_n, axis = 0) - b_n_tol
-            a_n_max_1 = a_n_max_2 * np.exp(b_n_remained / b_n_tol)
+            a_n_max_1 = 10 * np.exp(- b_n_tol / max(b_n_tol))
             a_n_old = copy.copy(a_n)
             a_n = convex_leader(c_n, b_m_n, a_n_max_1, a_n_max_2)
             a_n = (a_n_old + a_n) / 2
